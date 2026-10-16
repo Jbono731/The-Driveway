@@ -177,7 +177,7 @@
     var bc=document.getElementById('bedc');if(bc)bc.onclick=function(){go('ci-bed');};
     document.getElementById('mirrorc').onclick=function(){go('mirror');};var hs=document.getElementById('homeset');if(hs)hs.onclick=function(){go('settings');};
     S.querySelectorAll('.rec').forEach(function(b){b.onclick=function(){jreturnTab=null;jtab=b.dataset.tab;jcbOpen=false;jEntry(+b.dataset.i,'home');};});
-    bindNav();
+    bindNav();syncNotifications();
   }
   function recentEntries(n){var all=[];['personal','work'].forEach(function(tb){(jdata[tb]||[]).forEach(function(e,i){all.push({e:e,tab:tb,i:i});});});all.sort(function(a,b){return (b.e.ts||0)-(a.e.ts||0);});return all.slice(0,n||2);}
   function recrow(it){var e=it.e;var wk=(it.tab==='work');return '<div class="rec" data-tab="'+it.tab+'" data-i="'+it.i+'" style="display:flex;align-items:center;gap:12px;padding:13px 15px;cursor:pointer;"><span style="width:9px;height:9px;border-radius:50%;background:'+moods[e.mood][1]+';flex-shrink:0;"></span><div style="flex:1;min-width:0;"><div style="display:flex;align-items:center;gap:7px;"><p style="margin:0;font-size:14px;color:'+C.TXT+';font-weight:500;">'+e.d+'</p><span style="font-size:10px;color:'+(wk?C.AMBERD:C.TEALT)+';background:'+(wk?C.ASOFT:C.TSOFT)+';padding:1px 7px;border-radius:10px;">'+(wk?'Work':'Personal')+'</span></div><p style="margin:1px 0 0;font-size:12px;color:'+C.MUT+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+moods[e.mood][0]+' · '+e.t+'</p></div><i class="ti ti-chevron-right" style="font-size:16px;color:#C0C8CD;flex-shrink:0;"></i></div>';}
@@ -500,6 +500,27 @@
   var setupDone=false;
   function saveState(){if(!TESTMODE)return;try{localStorage.setItem('dw_setup',setupDone?'1':'0');localStorage.setItem('dw_profile',JSON.stringify(profile));localStorage.setItem('dw_jdata',JSON.stringify(jdata));}catch(e){}}
   function loadState(){if(!TESTMODE)return;try{var p=localStorage.getItem('dw_profile');if(p){var o=JSON.parse(p);for(var k in o){if(o.hasOwnProperty(k))profile[k]=o[k];}}var j=localStorage.getItem('dw_jdata');if(j){var jj=JSON.parse(j);if(jj&&jj.personal&&jj.work)jdata=jj;}setupDone=(localStorage.getItem('dw_setup')==='1');}catch(e){}}
+  /* NATIVE SCHEDULED NOTIFICATIONS (shift-end nudge + volunteer weekly). No-op on web. */
+  function syncNotifications(){try{
+    var CAP=(typeof window!=='undefined')&&window.Capacitor;
+    if(!CAP||!CAP.isNativePlatform||!CAP.isNativePlatform())return;
+    var LN=CAP.Plugins&&CAP.Plugins.LocalNotifications;if(!LN)return;
+    LN.requestPermissions().then(function(){
+      return LN.cancel({notifications:[{id:7001},{id:7002}]});
+    }).then(function(){
+      var s=profile.schedule||{};var list=[];
+      if(s.mode==='volunteer'){
+        var wt=(s.offTime||'19:00').split(':');
+        list.push({id:7002,title:'The Driveway',body:'Your weekly check-in — how’d the week go? Any calls stick with you?',schedule:{on:{weekday:((s.weeklyDay||0)+1),hour:+wt[0],minute:+wt[1]},repeats:true,allowWhileIdle:true}});
+      }else if(s.mode&&s.mode!=='varies'&&s.trigger==='time'&&s.offDate&&s.offTime){
+        var d=new Date(s.offDate+'T'+s.offTime+':00');d.setMinutes(d.getMinutes()+(s.delayMin||0));
+        if(d.getTime()>Date.now()+5000){
+          list.push({id:7001,title:'The Driveway',body:'You made it home. These five minutes are yours — before the day pulls you back.',schedule:{at:d,allowWhileIdle:true}});
+        }
+      }
+      if(list.length)return LN.schedule({notifications:list});
+    }).catch(function(){});
+  }catch(e){}}
   function resetState(){try{localStorage.removeItem('dw_setup');localStorage.removeItem('dw_profile');localStorage.removeItem('dw_jdata');}catch(e){}if(typeof location!=='undefined'&&location.reload)location.reload();}
   loadState();
   go('splash');
