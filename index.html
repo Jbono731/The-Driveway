@@ -91,8 +91,11 @@
   function emblem(sz){sz=sz||17;var r=(sz*0.2);return '<img src="'+DWICON+'" width="'+sz+'" height="'+sz+'" alt="" style="display:block;border-radius:'+r.toFixed(1)+'px;object-fit:cover;">';}
   var embN=0;
   function splash(){var sky='<svg viewBox="0 0 342 620" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="position:absolute;inset:0;z-index:0;" aria-hidden="true"><defs><linearGradient id="ssky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#232A30"/><stop offset="0.6" stop-color="#36423C"/><stop offset="1" stop-color="#5A5138"/></linearGradient><radialGradient id="sgl" cx="0.5" cy="0.9" r="0.7"><stop offset="0" stop-color="var(--amber2)" stop-opacity="0.4"/><stop offset="1" stop-color="var(--amber2)" stop-opacity="0"/></radialGradient></defs><rect width="342" height="620" fill="url(#ssky)"/><rect width="342" height="620" fill="url(#sgl)"/></svg>';
-    show(sb(false)+'<div id="splashwrap" style="flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;background:#232A30;transition:opacity .45s ease;">'+sky+'<div style="position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;"><div style="width:84px;height:84px;display:flex;align-items:center;justify-content:center;animation:breathe 1.8s ease-in-out infinite;">'+emblem(84)+'</div><p style="margin:16px 0 0;color:#9FB0A8;font-size:11px;letter-spacing:2px;font-weight:500;">THE DRIVEWAY</p></div></div>');
-    setTimeout(function(){var w=document.getElementById('splashwrap');if(w){w.style.opacity='0';setTimeout(function(){if(document.getElementById('splashwrap'))go('lock');},430);}},1150);}
+    /* Just the Driveway colors while the app loads — no logo/title here; the
+       lock screen is the first and only place the emblem + title + tagline
+       appear, so the open doesn't feel busy with a double logo. */
+    show(sb(false)+'<div id="splashwrap" style="flex:1;position:relative;overflow:hidden;background:#232A30;transition:opacity .5s ease;">'+sky+'</div>');
+    setTimeout(function(){var w=document.getElementById('splashwrap');if(w){w.style.opacity='0';setTimeout(function(){if(document.getElementById('splashwrap'))go('lock');},470);}},700);}
   var lockMode='bio',discFrom='lock';
   /* Real native biometric gate (Face ID / fingerprint). Falls through on web or if unavailable. */
   function bioAuth(onOk){try{
